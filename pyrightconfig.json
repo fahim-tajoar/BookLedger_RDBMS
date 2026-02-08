@@ -1,0 +1,9 @@
+{
+  "venvPath": "/Users/saklinemuttakeenshaan/Desktop/BookLedger_RDBMS",
+  "venv": "venv",
+  "pythonVersion": "3.13",
+  "pythonPath": "/Users/saklinemuttakeenshaan/Desktop/BookLedger_RDBMS/venv/bin/python",
+  "extraPaths": [
+    "/Users/saklinemuttakeenshaan/Desktop/BookLedger_RDBMS/venv/lib/python3.13/site-packages"
+  ]
+}
