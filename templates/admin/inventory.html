@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fadeInUp">
+    <div style="margin-bottom:1.25rem;">
+        <a href="{{ url_for('admin.dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+        <h1 style="font-size:1.5rem; font-weight:800; color:var(--text-primary); margin-top:0.35rem;">📦 Inventory
+            Management</h1>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-top:0.15rem;">{{ books|length }} books in
+            catalog</p>
+    </div>
+</div>
+
+<!-- Add Book Form -->
+<div x-data="{ open: false }" style="margin-bottom:1.25rem;" class="animate-fadeInUp delay-1">
+    <button @click="open = !open" class="btn btn-primary">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add New Book
+    </button>
+    <div x-show="open" x-transition class="glass-panel" style="padding:1.25rem; margin-top:0.75rem;">
+        <form action="{{ url_for('admin.add_book') }}" method="POST"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label class="form-label">ISBN *</label>
+                <input type="text" name="isbn" required class="form-input">
+            </div>
+            <div>
+                <label class="form-label">Title *</label>
+                <input type="text" name="title" required class="form-input">
+            </div>
+            <div style="grid-column: span 2;">
+                <label class="form-label">Description</label>
+                <textarea name="description" rows="2" class="form-input"
+                    placeholder="Short book description..."></textarea>
+            </div>
+            <div>
+                <label class="form-label">Genre *</label>
+                <select name="genre_id" required class="form-select">
+                    {% for g in genres %}
+                    <option value="{{ g.genre_id }}">{{ g.genre_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Price *</label>
+                <input type="number" name="price" step="0.01" min="0.01" required class="form-input">
+            </div>
+            <div>
+                <label class="form-label">Stock Qty</label>
+                <input type="number" name="stock_qty" value="0" min="0" class="form-input">
+            </div>
+            <div>
+                <label class="form-label">Supplier</label>
+                <select name="supplier_id" class="form-select">
+                    <option value="">— None —</option>
+                    {% for s in suppliers %}
+                    <option value="{{ s.supplier_id }}">{{ s.company_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Publication Date</label>
+                <input type="date" name="publication_date" class="form-input">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <button type="submit" class="btn btn-gold" style="width:100%;">Save Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="table-container animate-fadeInUp delay-2">
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Description</th>
+                    <th>Genre</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Supplier</th>
+                    <th>Published</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td>
+                        <p style="font-weight:600;">{{ book.title }}</p>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.1rem;">{{ book.isbn }}</p>
+                    </td>
+                    <td style="max-width:14rem;">
+                        <p
+                            style="font-size:0.78rem; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                            {{ book.description or '—' }}</p>
+                    </td>
+                    <td><span class="badge badge-saddle">{{ book.genre_name }}</span></td>
+                    <td style="font-weight:600;">${{ "%.2f"|format(book.price|float) }}</td>
+                    <td>
+                        <span
+                            style="font-weight:700; {% if book.stock_qty < 5 %}color:var(--danger);{% elif book.stock_qty < 15 %}color:var(--warning);{% else %}color:var(--success);{% endif %}">
+                            {{ book.stock_qty }}
+                        </span>
+                    </td>
+                    <td style="color:var(--text-muted);">{{ book.supplier_name or '—' }}</td>
+                    <td style="color:var(--text-muted); font-size:0.82rem;">{{ book.publication_date or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

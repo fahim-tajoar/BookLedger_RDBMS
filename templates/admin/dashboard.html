@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:0.75rem;"
+    class="animate-fadeInUp">
+    <div>
+        <h1 style="font-size:1.5rem; font-weight:800; color:var(--text-primary);">📊 Admin Dashboard</h1>
+        <p style="color:var(--text-secondary); font-size:0.88rem; margin-top:0.15rem;">Revenue metrics, alerts &amp;
+            quick actions</p>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+        <form action="{{ url_for('admin.refresh_views') }}" method="POST">
+            <button type="submit" class="btn btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
+                </svg>
+                Refresh Views
+            </button>
+        </form>
+        <form action="{{ url_for('admin.auto_restock') }}" method="POST">
+            <button type="submit" class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                Auto-Restock
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid-4" style="margin-bottom:1.5rem;">
+    <div class="stat-card animate-fadeInUp delay-1">
+        <p class="stat-label">Total Revenue</p>
+        <p class="stat-value" style="font-size:1.5rem; color:var(--success);">${{
+            "%.2f"|format(kpis.total_revenue|float) }}</p>
+        <p class="stat-note">All time</p>
+    </div>
+    <div class="stat-card animate-fadeInUp delay-2">
+        <p class="stat-label">Total Sales</p>
+        <p class="stat-value" style="font-size:1.5rem;">{{ kpis.total_sales }}</p>
+        <p class="stat-note">Completed orders</p>
+    </div>
+    <div class="stat-card animate-fadeInUp delay-3">
+        <p class="stat-label">Avg Order Value</p>
+        <p class="stat-value" style="font-size:1.5rem; color:var(--accent-orange);">${{
+            "%.2f"|format(kpis.avg_order|float) }}</p>
+        <p class="stat-note">Per transaction</p>
+    </div>
+    <div class="stat-card animate-fadeInUp delay-4">
+        <p class="stat-label">Catalog Size</p>
+        <p class="stat-value" style="font-size:1.5rem;">{{ total_books }}</p>
+        <p class="stat-note">{{ total_customers }} customers</p>
+    </div>
+</div>
+
+<!-- Low Stock Alerts -->
+{% if low_stock %}
+<div style="margin-bottom:1.5rem;" class="animate-fadeInUp delay-3">
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+        <span style="width:8px; height:8px; border-radius:50%; background:var(--danger);"></span>
+        <h2 style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">Low Stock Alerts</h2>
+        <span class="badge badge-danger">{{ low_stock|length }} items</span>
+    </div>
+    <div class="grid-3">
+        {% for book in low_stock %}
+        <div
+            style="background:#fff; border:1px solid {% if book.stock_qty == 0 %}#f5c6cb{% else %}#ffeeba{% endif %}; border-radius:6px; padding:0.85rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <p style="font-weight:600; color:var(--text-primary); font-size:0.85rem;">{{ book.title }}</p>
+                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.15rem;">ISBN: {{ book.isbn }}</p>
+            </div>
+            <div style="text-align:right;">
+                <span
+                    style="font-size:1.35rem; font-weight:800; {% if book.stock_qty == 0 %}color:var(--danger);{% else %}color:var(--warning);{% endif %}">
+                    {{ book.stock_qty }}
+                </span>
+                <p style="font-size:0.65rem; color:var(--text-muted);">in stock</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Sales -->
+<div style="margin-bottom:1.5rem;" class="animate-fadeInUp delay-4">
+    <div class="section-header">
+        <h2>💰 Recent Sales</h2>
+    </div>
+    <div class="table-container">
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sale #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in recent_sales %}
+                    <tr>
+                        <td style="font-weight:700; color:var(--accent-orange);">#{{ sale.sale_id }}</td>
+                        <td>{{ sale.customer_name }}</td>
+                        <td style="font-weight:600;">${{ "%.2f"|format(sale.total_amount|float) }}</td>
+                        <td>
+                            <span
+                                class="badge {% if sale.payment_method == 'CARD' %}badge-info{% elif sale.payment_method == 'ONLINE' %}badge-purple{% else %}badge-olive{% endif %}">
+                                {{ sale.payment_method }}
+                            </span>
+                        </td>
+                        <td style="color:var(--text-muted); font-size:0.82rem;">{{ sale.sale_date.strftime('%b %d, %Y')
+                            if sale.sale_date else '-' }}</td>
+                        <td><span class="badge badge-success">{{ sale.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="grid-6 animate-fadeInUp delay-5">
+    <a href="{{ url_for('admin.inventory') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">📦</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Inventory</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.purchase_orders') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">📋</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Purchase Orders</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.returns') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">↩️</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Returns</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.audit') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">📝</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Audit Logs</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.coupons') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">🎟️</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Coupons</p>
+        </div>
+    </a>
+    <a href="{{ url_for('admin.revenue_forecast') }}" class="card" style="text-decoration:none; text-align:center;">
+        <div class="card-body">
+            <div style="font-size:1.75rem; margin-bottom:0.35rem;">📈</div>
+            <p style="font-weight:700; color:var(--text-primary); font-size:0.88rem;">Revenue</p>
+        </div>
+    </a>
+</div>
+{% endblock %}

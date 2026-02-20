@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin-bottom:1.25rem;" class="animate-fadeInUp">
+    <a href="{{ url_for('admin.dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+    <h1 style="font-size:1.5rem; font-weight:800; color:var(--text-primary); margin-top:0.35rem;">📝 Audit Logs</h1>
+    <p style="color:var(--text-secondary); font-size:0.88rem; margin-top:0.15rem;">Track all price and stock changes
+        across the system</p>
+</div>
+
+{% if logs %}
+<div class="table-container animate-fadeInUp delay-1">
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Table</th>
+                    <th>Record</th>
+                    <th>Action</th>
+                    <th>Column</th>
+                    <th>Old → New</th>
+                    <th>By</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="font-family:monospace; color:var(--text-muted); font-size:0.78rem;">{{ log.log_id }}</td>
+                    <td><span class="badge badge-teal">{{ log.target_table }}</span></td>
+                    <td style="font-family:monospace; font-size:0.78rem;">{{ log.target_pk }}</td>
+                    <td>
+                        <span
+                            class="badge {% if log.action_type == 'INSERT' %}badge-success{% elif log.action_type == 'UPDATE' %}badge-info{% else %}badge-danger{% endif %}">
+                            {{ log.action_type }}
+                        </span>
+                    </td>
+                    <td style="font-weight:500; font-size:0.82rem;">{{ log.column_changed or '—' }}</td>
+                    <td style="font-size:0.82rem;">
+                        {% if log.old_value %}
+                        <span style="color:var(--danger); text-decoration:line-through;">{{ log.old_value }}</span>
+                        <span style="color:var(--text-muted); margin:0 0.2rem;">→</span>
+                        {% endif %}
+                        <span style="color:var(--success); font-weight:600;">{{ log.new_value or '—' }}</span>
+                    </td>
+                    <td style="color:var(--text-muted); font-size:0.82rem;">{{ log.changed_by or '—' }}</td>
+                    <td style="font-size:0.72rem; color:var(--text-muted);">{{ log.change_time.strftime('%b %d, %H:%M')
+                        if log.change_time else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="glass-panel" style="text-align:center; padding:3rem 1.5rem;" class="animate-fadeInUp">
+    <div style="font-size:2.5rem; margin-bottom:0.5rem;">📝</div>
+    <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">No Audit Logs Yet</h3>
+    <p style="color:var(--text-secondary); margin-top:0.25rem;">Logs will appear here whenever book prices or stock
+        quantities change.</p>
+</div>
+{% endif %}
+{% endblock %}

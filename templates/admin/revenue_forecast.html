@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Monthly Revenue Forecast</h1>
+    </div>
+
+    <!-- Forecast Data -->
+    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-4 font-semibold text-gray-600">Month</th>
+                    <th class="px-6 py-4 font-semibold text-gray-600 text-right">Orders</th>
+                    <th class="px-6 py-4 font-semibold text-gray-600 text-right">Revenue</th>
+                    <th class="px-6 py-4 font-semibold text-gray-600 text-right">MoM Growth</th>
+                    <th class="px-6 py-4 font-semibold text-gray-600 text-right">3-Month Avg</th>
+                    <th class="px-6 py-4 font-semibold text-gray-600 text-right">YTD Revenue</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for row in forecast %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 font-medium">{{ row.month.strftime('%B %Y') }}</td>
+                    <td class="px-6 py-4 text-right text-gray-600">{{ row.total_orders }}</td>
+                    <td class="px-6 py-4 text-right font-medium text-gray-900">${{ "%.2f"|format(row.revenue) }}</td>
+                    
+                    <td class="px-6 py-4 text-right font-medium">
+                        {% if row.growth_pct is not none %}
+                            {% if row.growth_pct > 0 %}
+                                <span class="text-green-600">▲ {{ "%.1f"|format(row.growth_pct) }}%</span>
+                            {% elif row.growth_pct < 0 %}
+                                <span class="text-red-600">▼ {{ "%.1f"|format(abs(row.growth_pct)) }}%</span>
+                            {% else %}
+                                <span class="text-gray-500">-</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-gray-400">N/A</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 text-right text-gray-600">
+                        {% if row.rolling_3mo_avg %}
+                            ${{ "%.2f"|format(row.rolling_3mo_avg) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right font-bold text-gray-900">
+                        ${{ "%.2f"|format(row.cumulative_ytd_revenue) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        No revenue data available yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
