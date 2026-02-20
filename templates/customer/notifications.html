@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h1 class="text-3xl font-bold">Notifications</h1>
+        {% if notifications %}
+            <form action="{{ url_for('customer.read_all_notifications') }}" method="POST">
+                <button type="submit" class="text-sm font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2 px-4 py-2 bg-white border rounded-md hover:bg-gray-50 transition-colors">
+                    <span>✓</span> Mark all as read
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+        <div class="space-y-4">
+            {% for notif in notifications %}
+            <div class="bg-white rounded-xl shadow-sm border p-6 flex gap-4 transition-all duration-200 hover:shadow-md {% if not notif.is_read %}border-l-4 border-l-blue-500 bg-blue-50/30{% endif %}">
+                <div class="text-2xl mt-1 shrink-0">
+                    {% if notif.type == 'ORDER_COMPLETE' %}
+                        📦
+                    {% elif notif.type == 'PRICE_DROP' %}
+                        💰
+                    {% elif notif.type == 'RESTOCK' %}
+                        ✨
+                    {% elif notif.type == 'TRUST_MILESTONE' %}
+                        🌟
+                    {% elif notif.type == 'WELCOME' %}
+                        🎉
+                    {% elif notif.type == 'COUPON' %}
+                        🎟️
+                    {% else %}
+                        ℹ️
+                    {% endif %}
+                </div>
+                <div class="flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-lg {% if not notif.is_read %}text-gray-900{% else %}text-gray-700{% endif %}">
+                            {{ notif.title }}
+                        </h3>
+                        <span class="text-sm text-gray-500 whitespace-nowrap ml-4">
+                            {{ notif.created_at.strftime('%b %d, %Y') }}
+                        </span>
+                    </div>
+                    <p class="text-gray-600 mb-4">{{ notif.message }}</p>
+                    
+                    {% if not notif.is_read %}
+                        <form action="{{ url_for('customer.read_notification', notif_id=notif.notification_id) }}" method="POST">
+                            <button type="submit" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                                Mark as read
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-xl shadow-sm border p-12 text-center">
+            <span class="text-4xl mb-4 block">📭</span>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">No notifications</h2>
+            <p class="text-gray-600">You're all caught up! We'll notify you about order updates, wishlisted books, and special offers here.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

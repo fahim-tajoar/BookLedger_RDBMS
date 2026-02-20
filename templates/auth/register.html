@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-wrapper animate-scaleIn">
+    <div class="auth-logo">📚 BookLedger</div>
+
+    <div class="auth-card">
+        <h2>Create account</h2>
+
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+
+            <div style="margin-bottom:0.85rem;">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-input", placeholder="First and last name") }}
+                {% if form.name.errors %}
+                <p class="form-error">{{ form.name.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom:0.85rem;">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-input") }}
+                {% if form.email.errors %}
+                <p class="form-error">{{ form.email.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom:0.85rem;">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-input", placeholder="At least 6 characters") }}
+                {% if form.password.errors %}
+                <p class="form-error">{{ form.password.errors[0] }}</p>
+                {% endif %}
+                <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">
+                    ℹ️ Passwords must be at least 6 characters.
+                </p>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-input") }}
+                {% if form.confirm_password.errors %}
+                <p class="form-error">{{ form.confirm_password.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <div style="margin-top:1.25rem;">
+                {{ form.submit(class="btn btn-gold btn-lg", style="width:100%") }}
+            </div>
+        </form>
+
+        <p style="margin-top:1.25rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">
+            By creating an account, you agree to BookLedger's Conditions of Use and Privacy Notice.
+        </p>
+
+        <hr style="border:none; border-top:1px solid var(--border-light); margin:1.25rem 0;">
+
+        <p style="font-size:0.82rem; color:var(--text-secondary); text-align:center;">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}" style="color:var(--text-link); text-decoration:none;">Sign in →</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

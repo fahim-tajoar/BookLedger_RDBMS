@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ─── Page Header ─── -->
+<div style="text-align:center; margin-bottom:1.5rem;" class="animate-fadeInUp">
+    <div style="font-size:2.5rem; margin-bottom:0.5rem;">🤖</div>
+    <h1 style="font-size:1.5rem; font-weight:800; color:var(--text-primary); margin-bottom:0.35rem;">
+        AI Book Recommender
+    </h1>
+    <p style="font-size:0.9rem; color:var(--text-secondary); max-width:30rem; margin:0 auto;">
+        Tell us what you're in the mood to read even your reading mood, and our AI finds the perfect match from our
+        inventory.
+    </p>
+</div>
+
+<!-- ─── Search Form ─── -->
+<div class="glass-panel"
+    style="padding:1.5rem; margin-bottom:1.5rem; max-width:700px; margin-left:auto; margin-right:auto;"
+    class="animate-fadeInUp delay-1">
+    <form method="POST" action="{{ url_for('ai.recommend') }}">
+        <label class="form-label" style="margin-bottom:0.5rem; display:block;">
+            What are you looking for?
+        </label>
+        <textarea name="query" rows="3" class="form-input" required
+            placeholder="e.g. Something dark and mysterious with a twist... / A feel-good romance set in Europe / A sci-fi epic with AI themes..."
+            style="width:100%; resize:vertical; margin-bottom:0.75rem; font-size:0.88rem;">{{ user_query or '' }}</textarea>
+        <button type="submit" class="btn btn-gold btn-lg" style="width:100%;">
+            ✨ Get AI Suggestions
+        </button>
+    </form>
+</div>
+
+<!-- ─── AI Message ─── -->
+{% if ai_message %}
+<div class="ai-reason" style="max-width:700px; margin:0 auto 1.5rem; padding:0.85rem 1rem;">
+    <div style="display:flex; align-items:flex-start; gap:0.6rem;">
+        <span style="font-size:1.2rem;">💡</span>
+        <p style="color:var(--text-secondary); font-size:0.88rem; line-height:1.5; margin:0;">
+            {{ ai_message }}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- ─── Recommendations ─── -->
+{% if recommendations %}
+<div style="max-width:900px; margin:0 auto;">
+    <h2 style="font-size:1.15rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem;"
+        class="animate-fadeInUp">
+        🎯 Recommended for You
+    </h2>
+
+    {% for rec in recommendations %}
+    <div class="glass-panel" style="margin-bottom:1rem; overflow:hidden;" class="animate-fadeInUp"
+        style="animation-delay: {{ loop.index * 0.1 }}s;">
+        <div style="display:flex; flex-wrap:wrap;">
+            <!-- Cover -->
+            <div
+                style="flex:0 0 140px; background:var(--bg-light); display:flex; align-items:center; justify-content:center; min-height:160px; border-right:1px solid var(--border-light);">
+                <span style="font-size:2.5rem; opacity:0.15;">📖</span>
+            </div>
+
+            <!-- Details -->
+            <div style="flex:1; min-width:250px; padding:1rem 1.25rem;">
+                <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.35rem;">
+                    <span class="badge badge-saddle">{{ rec.genre_name }}</span>
+                    {% if rec.stock_qty <= 5 and rec.stock_qty> 0 %}
+                        <span class="badge badge-danger">Only {{ rec.stock_qty }} left!</span>
+                        {% endif %}
+                </div>
+
+                <h3 style="font-size:1.1rem; font-weight:700; color:var(--text-link); margin-bottom:0.2rem;">
+                    <a href="{{ url_for('customer.book_details', isbn=rec.isbn) }}"
+                        style="text-decoration:none; color:inherit;">{{ rec.title }}</a>
+                </h3>
+                <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.5rem;">
+                    by <span style="font-weight:600; color:var(--text-primary);">{{ rec.author_name }}</span>
+                </p>
+
+                {% if rec.description %}
+                <p style="font-size:0.82rem; color:var(--text-secondary); line-height:1.45; margin-bottom:0.5rem;">
+                    {{ rec.description }}
+                </p>
+                {% endif %}
+
+                <!-- AI Reason -->
+                <div class="ai-reason">
+                    <p><strong>Why this?</strong> {{ rec.reason }}</p>
+                </div>
+
+                <div
+                    style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                    <span style="font-size:1.25rem; font-weight:700; color:var(--text-price);">${{ rec.price }}</span>
+                    <div style="display:flex; gap:0.4rem;">
+                        <form action="{{ url_for('customer.add_to_cart', isbn=rec.isbn) }}" method="POST">
+                            <button type="submit" class="btn btn-primary btn-sm">Add to Cart</button>
+                        </form>
+                        <a href="{{ url_for('customer.book_details', isbn=rec.isbn) }}"
+                            class="btn btn-secondary btn-sm">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% elif request.method == 'POST' and not get_flashed_messages() %}
+<div style="text-align:center; padding:3rem 1rem;" class="animate-fadeInUp">
+    <div style="font-size:2.5rem; margin-bottom:0.75rem;">🤷</div>
+    <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">No matches found</h3>
+    <p style="color:var(--text-secondary); margin-top:0.25rem;">Try describing what you're looking for differently!</p>
+</div>
+{% endif %}
+
+<!-- ─── Suggestion Chips ─── -->
+{% if not recommendations %}
+<div style="max-width:700px; margin:1.5rem auto 0;" class="animate-fadeInUp delay-2">
+    <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:0.5rem; text-align:center;">
+        Try one of these:
+    </p>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.4rem;">
+        {% for suggestion in [
+        "Something dark and spine-tingling",
+        "A sweeping romantic adventure",
+        "An epic sci-fi with AI themes",
+        "Historical fiction with political intrigue",
+        "A page-turning mystery thriller",
+        "Fantasy with rich world-building"
+        ] %}
+        <form method="POST" action="{{ url_for('ai.recommend') }}" style="display:inline;">
+            <input type="hidden" name="query" value="{{ suggestion }}">
+            <button type="submit" class="btn btn-secondary btn-sm" style="font-size:0.78rem;">
+                {{ suggestion }}
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

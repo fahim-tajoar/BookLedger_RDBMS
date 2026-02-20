@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ─── Hero Banner ─── -->
+<div class="hero animate-fadeInUp">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <h1>
+            Discover Your Next<br>
+            <span class="text-highlight">Great Read</span>
+        </h1>
+        <p>
+            Browse our curated collection of books. Earn trust scores, unlock VIP pricing,
+            and get AI-powered recommendations — all in one place.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+            <a href="{{ url_for('customer.catalog') }}" class="btn btn-gold btn-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Shop All Books
+            </a>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-orange btn-lg">
+                ✨ Join Free &amp; Get Rewards
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ─── Trending Authors ─── -->
+<div style="margin-bottom:2rem;">
+    <div class="section-header animate-fadeInUp delay-2">
+        <h2>🔥 Trending Authors</h2>
+        <p>Bestselling writers this month</p>
+    </div>
+    <div class="grid-4">
+        {% for author in top_authors %}
+        <div class="card animate-fadeInUp" style="animation-delay: {{ loop.index * 0.08 }}s">
+            <div class="card-body"
+                style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:1.25rem;">
+                <div
+                    style="width:3.5rem; height:3.5rem; background:var(--header-secondary); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.3rem; font-weight:800; margin-bottom:0.75rem;">
+                    {{ author.full_name[0] }}
+                </div>
+                <h3 style="font-size:0.95rem; font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">
+                    {{ author.full_name }}
+                </h3>
+                <span class="badge badge-info" style="margin-bottom:0.75rem;">{{ author.unique_titles_sold }} Titles
+                    Sold</span>
+                <div
+                    style="width:100%; padding-top:0.75rem; border-top:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; color:var(--text-secondary);">Revenue</span>
+                    <span style="font-weight:700; color:var(--text-price);">${{ author.total_generated_revenue }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ─── Explore by Genre ─── -->
+<div style="margin-bottom:2rem;">
+    <div class="section-header animate-fadeInUp delay-3">
+        <h2>📖 Browse by Genre</h2>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+        {% for genre in genre_trends %}
+        <a href="{{ url_for('customer.catalog', genre=genre.genre_name) }}" class="genre-pill animate-fadeInUp"
+            style="animation-delay: {{ loop.index * 0.06 }}s">
+            <span class="genre-dot"></span>
+            <span>{{ genre.genre_name }}</span>
+            <span class="badge badge-olive" style="font-size:0.65rem;">{{ genre.total_books_sold }} sold</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

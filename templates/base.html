@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookLedger — Your Online Bookstore</title>
+    <meta name="description"
+        content="BookLedger — discover your next great read. Browse thousands of books, earn rewards, and enjoy smart pricing.">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'amz-dark': '#131921',
+                        'amz-mid': '#232f3e',
+                        'amz-orange': '#f08804',
+                        'amz-gold': '#febd69',
+                        'amz-yellow': '#ffd814',
+                        'amz-link': '#007185',
+                        'amz-price': '#b12704',
+                        'amz-success': '#067d62',
+                    },
+                    fontFamily: { inter: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Custom Design System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <!-- ─── Navigation — Top Bar ─── -->
+    <nav class="nav-main" x-data="{ mobileOpen: false }">
+        <div class="nav-top-bar">
+            <!-- Logo -->
+            <a href="{{ url_for('customer.home') }}" class="nav-logo">
+                📚 <span>Book</span><span class="logo-accent">Ledger</span>
+            </a>
+
+            <!-- Search -->
+            <form class="nav-search" method="GET" action="{{ url_for('customer.catalog') }}">
+                <input type="text" name="title" placeholder="Search books, authors, genres..."
+                    value="{{ request.args.get('title', '') }}">
+                <button type="submit" aria-label="Search">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Right: Account + Cart -->
+            <div class="nav-right" style="display:flex; align-items:center; gap:1.25rem;">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('customer.view_notifications') }}" class="nav-cart-link" style="position:relative;">
+                    <span class="nav-cart-icon" style="font-size:1.4rem;">🔔</span>
+                    {% if unread_count and unread_count > 0 %}
+                    <span class="nav-cart-badge">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('customer.profile') }}" class="nav-account">
+                    <span class="nav-account-label">Hello, {{ current_user.email.split('@')[0].capitalize() }}</span>
+                    <span class="nav-account-name">Account ▾</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="nav-account">
+                    <span class="nav-account-label">Hello, Sign in</span>
+                    <span class="nav-account-name">Account ▾</span>
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('customer.view_cart') }}" class="nav-cart-link">
+                    <span class="nav-cart-icon">
+                        🛒
+                        {% set cart_count = session.get('cart', {})|length %}
+                        {% if cart_count > 0 %}
+                        <span class="nav-cart-badge">{{ cart_count }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="nav-cart-text">Cart</span>
+                </a>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button class="mobile-toggle" @click="mobileOpen = !mobileOpen" aria-label="Toggle menu">
+                <svg x-show="!mobileOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                <svg x-show="mobileOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sub Nav -->
+        <div class="nav-sub">
+            <div class="nav-sub-inner" :class="mobileOpen && 'flex flex-wrap'">
+                <a href="{{ url_for('customer.catalog') }}" class="nav-link">📖 All Books</a>
+                <a href="{{ url_for('ai.recommend') }}" class="nav-link">🤖 AI Picks</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('customer.view_wishlist') }}" class="nav-link">❤️ Wishlist</a>
+                {% if current_user.role == 'customer' %}
+                <a href="{{ url_for('customer.profile') }}" class="nav-link">👤 My Orders</a>
+                {% endif %}
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-link">⚙️ Admin</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="btn-nav-ghost">Sign Out</a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" class="btn-nav">✨ Create Account</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Flash Messages ─── -->
+    <div style="width:100%; max-width:1400px; margin:0.75rem auto 0; padding:0 1rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div x-data="{ show: true }" x-show="show"
+            class="flash-msg {% if category == 'success' %}flash-success{% elif category == 'danger' %}flash-danger{% elif category == 'warning' %}flash-warning{% else %}flash-info{% endif %}">
+            <span>{{ message }}</span>
+            <button @click="show = false" class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- ─── Main Content ─── -->
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ─── Footer ─── -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-top-inner">
+                <div class="footer-col">
+                    <h4>Get to Know Us</h4>
+                    <a href="#">About BookLedger</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Press Releases</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Make Money with Us</h4>
+                    <a href="#">Sell books on BookLedger</a>
+                    <a href="#">Become a Supplier</a>
+                    <a href="#">Advertise Your Books</a>
+                </div>
+                <div class="footer-col">
+                    <h4>BookLedger Rewards</h4>
+                    <a href="#">Membership Points</a>
+                    <a href="#">Trust Score Benefits</a>
+                    <a href="#">VIP Pricing</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Let Us Help You</h4>
+                    <a href="#">Your Account</a>
+                    <a href="#">Returns & Refunds</a>
+                    <a href="#">Help & FAQ</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>📚 BookLedger &copy; 2026 &mdash; Your trusted online bookstore. Crafted with ☕ and 📖</p>
+        </div>
+    </footer>
+
+    <!-- Scroll Reveal Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reveals = document.querySelectorAll('.reveal');
+            if (!reveals.length) return;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+            }, { threshold: 0.1 });
+            reveals.forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+
+</html>
